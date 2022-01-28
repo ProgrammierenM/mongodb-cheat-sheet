@@ -1,0 +1,205 @@
+// NOTE: Datenbank
+// Alle Datenbanken anzeigen
+show dbs
+
+// Aktualle Datenbank anzeigen
+db
+
+// Datenbank verwenden/anlegen
+use tutorial
+
+// Datenbank löschen
+db.dropDatabase('tutorial')
+
+// NOTE: Collections
+// Neue Collection anlegen
+db.createCollection('products')
+
+// Alle Collections anzeigen
+show collections
+
+// Collection löschen
+db.products.drop()
+
+// NOTE: Documents anlegen
+// Ein neues Document hinzufügen
+db.products.insertOne(
+  { 
+    name: "Banane", 
+    price: 0.99, 
+    category: 'Obst',
+    views: 16
+  }
+)
+
+// Mehrere Documents hinzufügen
+db.products.insertMany(
+  [ 
+    { 
+      name: "Apfel", 
+      price: 0.60, 
+      category: 'Obst',
+      views: 2
+    },
+    { 
+      name: "Apfel Neu", 
+      price: 0.80, 
+      category: 'Obst',
+      views: 10
+    }, 
+    { 
+      name: "Kiwi", 
+      price: 1.19, 
+      category: 'Obst',
+      views: 0,
+      ratings: [
+        { user: 'Paul', stars: 4},
+        { user: 'Tom', stars: 5},
+        { user: 'Max', stars: 3}
+      ] 
+    }
+  ]
+)
+
+// NOTE: Documents auslesen
+// Alle Documents aus der Collection anzeigen
+db.products.find()
+
+// Ergebnisse formatiert
+db.products.find().pretty()
+
+// Ergebnisse filtern
+db.products.find({ name: 'Apfel' })
+
+// Ergebnisse sortieren
+db.products.find().sort({ name: 1 })
+db.products.find().sort({ name: -1 })
+
+// Ergebnisse zählen
+db.products.find().count()
+db.products.countDocuments()
+
+// Ergebnisse limitieren
+db.products.find().limit(2)
+
+// Verkettung mehrerer Funktionen
+db.products.find().limit(2).sort({ price: 1 })
+
+// ForEach Schleife
+db.products.find().forEach(function(doc) {
+  print("Produkt: " + doc.name)
+})
+
+// Ergebnisse nach Größer/Kleiner filtern
+db.products.find({ price: { $gt: 1 } })
+db.products.find({ price: { $gte: 0.99 } })
+db.products.find({ price: { $lt: 0.99 } })
+db.products.find({ price: { $lte: 0.99 } })
+
+// Feld indexieren
+db.products.createIndex(
+  { name: 'text' }, 
+  { default_language: "german" }
+)
+
+// Alle Indexes anzeigen
+db.products.getIndexes()
+
+// Index löschen
+db.products.dropIndex('name_text')
+
+// Textsuche
+db.products.find({
+  $text: {
+    $search: "Apfel"
+  }
+})
+
+// Nur ein Ergebnis
+db.products.findOne({ category: 'Obst' })
+
+// Ergebnisse gefiltert und mit bestimmten Feldern
+db.products.find({ category: 'Obst' }, {
+  name: 1,
+  price: 1
+})
+
+// Alle Ergebnisse mit bestimmten Feldern
+db.products.find({}, {
+  name: 1,
+  price: 1
+})
+
+// Alle Ergebnisse ohne bestimmte Felder
+db.products.find({}, {
+  ratings: 0,
+  date: 0
+})
+
+// NOTE: Documents updaten
+// Ein Document aktualisieren
+db.products.updateOne({ name: "Banane" },
+{
+  $set: { 
+    price: 1.29 
+  }
+})
+
+// Ein Document aktualisieren/hinzufügen
+db.products.updateOne({ name: 'Gurke' },
+{
+  $set: { 
+    price: 0.5 ,
+    category: 'Gemüse',
+    views: 0
+  }
+},
+{
+  upsert: true
+})
+
+// Viele Documents aktualisieren
+db.products.updateMany({ category: "Obst" },
+{
+  $set: { 
+    price: 0.2 
+  }
+})
+
+// Einen Wert erhöhen
+db.products.updateOne({ name: 'Gurke' },
+{
+  $inc: {
+    views: 1
+  }
+})
+
+// Ein Feld umbenennen
+db.products.update({ name: 'Gurke' },
+{
+  $rename: {
+    views: 'likes'
+  }
+})
+
+// NOTE: Aggregates
+// Daten aus Collections verarbeiten 
+db.products.aggregate([
+  {
+    $match: { 
+      price: { $lt: 0.99 }
+    }
+  },
+  {
+    $group: {
+      _id: "$category", 
+      total_views: { $sum: "$views"}}
+  }
+])
+
+// NOTE: Documents löschen
+// Ein Document löschen
+db.products.deleteOne({ name: 'Gurke' })
+
+// Viele Documents löschen
+db.products.deleteMany({ category: 'Obst' })
